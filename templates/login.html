@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhysioCare AI - Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Athlete-Centric Recovery Hub</h1>
+<h2>Welcome back</h2>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert error">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
+      <p>Select your role and enter Patient ID (if applicable) to access exercises.</p>
+      <form method="POST" action="/">
+        <div class="form-group">
+          <label for="role">Select Role</label>
+          <select id="role" name="role" class="form-control" required style="color: #333; background-color: white;">
+            <option value="">Choose...</option>
+            <option value="Patient">Patient</option>
+            <option value="Therapist">Therapist</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="patient_id">Enter Patient ID (for Patient role)</label>
+          <input type="number" id="patient_id" name="patient_id" min="1" max="999" placeholder="e.g. 1">
+        </div>
+        <button type="submit" class="login-btn btn">Sign In</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

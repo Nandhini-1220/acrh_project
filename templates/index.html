@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhysioCare AI - Home</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <h1>PhysioCare AI</h1>
+        <p class="subtitle">AI-powered physiotherapy assistant</p>
+      </div>
+      <nav class="nav">
+        <a class="btn ghost" href="/login">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="login-section card">
+      <h2>Please login first</h2>
+      <p>Access to exercises requires login.</p>
+      <div class="actions">
+        <a class="btn" href="/login">Login</a>
+      </div>
+    </section>
+
+    <section id="exercises" class="card">
+      <h3>All Exercises</h3>
+      <div class="grid">
+        {% for e in exercises %}
+        <div class="card exercise-card">
+          <h4>{{ e.name }}</h4>
+          <p class="subtitle">{{ e.desc }}</p>
+          <div class="actions">
+            <a class="btn" href="{{ url_for('exercise_detail', exercise_key=e.key) }}">View details</a>
+            <a class="btn secondary" href="{{ url_for('launch_exercise') }}?exercise={{ e.key }}" target="_blank" rel="noopener">Start</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2025 PhysioCare AI</span>
+    </div>
+  </footer>
+</body>
+</html>

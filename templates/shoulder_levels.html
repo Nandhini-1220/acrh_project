@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shoulder Exercises - PhysioCare AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+  <header class="site-header">
+    <div class="container">
+      <nav class="nav">
+        <a class="btn ghost" href="/patient/{{ patient_id }}">← Back</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <div class="card">
+      <h1>Shoulder Exercises</h1>
+      <p>Patient #{{ patient_id }} - Choose exercise:</p>
+      
+      <div class="exercise-grid">
+        <div class="exercise-card">
+          <h3>1. Shoulder Flexion</h3>
+          <p>Raise arm forward → 160°-180°</p>
+          <a href="/exercise/shoulder_flexion" class="btn">Start Flexion</a>
+        </div>
+        
+        <div class="exercise-card">
+          <h3>2. Shoulder Abduction</h3>
+          <p>Raise arm sideways → 160°-180°</p>
+          <a href="/exercise/shoulder_abduction" class="btn">Start Abduction</a>
+        </div>
+        
+        <div class="exercise-card">
+          <h3>3. Shoulder Hyperextension</h3>
+          <p>Arm backward → 40°-60°</p>
+          <a href="/exercise/shoulder_extension" class="btn">Start Extension</a>
+        </div>
+        
+        <div class="exercise-card">
+          <h3>4. Shoulder Adduction</h3>
+          <p>Shoulder rotation → 40°-60°</p>
+          <a href="/exercise/shoulder_rotation" class="btn">Start Adduction</a>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <a href="/patient/{{ patient_id }}" class="btn secondary">Back to Dashboard</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

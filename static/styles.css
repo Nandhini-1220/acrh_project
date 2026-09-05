@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --sage-green: #84A98C;
+  --soft-mint: #CFFAFE;
+  --beige: #F5F5DC;
+  --white: #FFFFFF;
+  --soft-grey: #D1D5DB;
+  --dark-grey: #374151;
+  --shadow-soft: 0 4px 12px rgba(0,0,0,0.08);
+  --border-radius: 12px;
+  --font-poppins: 'Poppins', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  font-family: var(--font-poppins);
+  color: var(--dark-grey);
+  line-height: 1.6;
+  background: linear-gradient(to bottom, var(--beige), var(--soft-mint));
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header */
+.site-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--soft-grey);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--sage-green);
+}
+
+.subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--soft-grey);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Cards */
+.card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-soft);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.card h2, .card h3, .card h4 {
+  margin: 0 0 1rem;
+  font-weight: 500;
+  color: var(--dark-grey);
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--sage-green);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn:hover {
+  background: #6B8E79;
+}
+
+.btn.secondary {
+  background: var(--soft-grey);
+  color: var(--dark-grey);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--sage-green);
+  border: 1px solid var(--sage-green);
+}
+
+.btn.ghost:hover {
+  background: var(--sage-green);
+  color: var(--white);
+}
+
+/* Progress */
+.progress-container {
+  margin: 1.5rem 0;
+}
+
+.progress-bar {
+  height: 12px;
+  background: var(--soft-grey);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--soft-mint);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  margin-top: 0.5rem;
+  font-weight: 500;
+  color: var(--dark-grey);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--dark-grey);
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid var(--soft-grey);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--white);
+  color: var(--dark-grey);
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--sage-green);
+}
+
+/* Login */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-soft);
+  padding: 3rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+.login-card h2 {
+  margin-bottom: 0.5rem;
+}
+
+.login-card p {
+  color: var(--soft-grey);
+  margin-bottom: 2rem;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+/* Footer */
+.site-footer {
+  background: var(--white);
+  text-align: center;
+  padding: 2rem;
+  color: var(--soft-grey);
+  border-top: 1px solid var(--soft-grey);
+  margin-top: 4rem;
+}
+
+.site-footer .container {
+  padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .container {
+    padding: 0 1rem;
+  }
+}
+

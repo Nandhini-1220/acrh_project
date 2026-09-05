@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ex.name }} - Physio Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <h1>{{ ex.name }}</h1>
+        <p class="subtitle">Guided demo and setup</p>
+      </div>
+      <nav class="nav">
+        <a class="btn secondary" href="{{ url_for('index') }}">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h3>How to perform</h3>
+      <p>{{ ex.instruction }}</p>
+      <p><strong>Visual cue:</strong> {{ ex.visual }}</p>
+      <p><strong>Target:</strong>
+        {% if ex.type == "finger" and ex.key == "thumb_opposition" or ex.key == "finger_taps" %}
+          {{ ex.target|join(", ") }}
+        {% elif ex.type == "finger" and ex.key == "finger_spread" %}
+          {{ ex.target[0] }}-{{ ex.target[1] }} px between fingers
+        {% else %}
+          {{ ex.target[0] }}-{{ ex.target[1] }} deg
+        {% endif %}
+      </p>
+      <div class="actions">
+<a class="btn" href="{{ url_for('launch_exercise', exercise=ex_key, level=level) }}" target="_blank" rel="noopener">Start exercise</a>
+        <a class="btn secondary" href="{{ url_for('index') }}">Back to Home</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h4>Safety tips</h4>
+      <ul>
+        <li>Warm up gently before exercising</li>
+        <li>Stop if you feel pain</li>
+        <li>Move slowly and keep good form</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <a class="btn secondary" href="{{ url_for('index') }}">Home</a>
+    </div>
+  </footer>
+</body>
+</html>

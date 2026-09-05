@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient Levels - PhysioCare AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <h1>Patient #{{ patient_id }} - Exercise Levels</h1>
+        <p class="subtitle">Choose your exercise level</p>
+      </div>
+      <nav class="nav">
+        <a class="btn ghost" href="/">Dashboard</a>
+        <a class="btn secondary" href="/">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="grid">
+      {% if patient_id == 1 %}
+      <div class="card exercise-card">
+        <h4>Level 1: Wrist Flexion ({{ progress.level1 }}/10 reps)</h4>
+        <p class="subtitle">Bend wrist forward 50-70°</p>
+        <div class="actions">
+          <a href="/start_exercise/1" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 2: Wrist Extension ({{ progress.level2 }}/10 reps)</h4>
+        <p class="subtitle">Bend wrist backward 50-70°</p>
+        <div class="actions">
+          <a href="/start_exercise/2" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 3: Radial Deviation ({{ progress.level3 }}/10 reps)</h4>
+        <p class="subtitle">Bend wrist toward thumb 10-30°</p>
+        <div class="actions">
+          <a href="/start_exercise/3" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 4: Ulnar Deviation ({{ progress.level4 }}/10 reps)</h4>
+        <p class="subtitle">Bend wrist toward pinky 10-30°</p>
+        <div class="actions">
+          <a href="/start_exercise/4" class="btn">Start Exercise</a>
+        </div>
+      </div>
+      {% elif patient_id == 2 %}
+      <div class="card exercise-card">
+        <h4>Level 1: Shoulder Flexion</h4>
+<p class="subtitle">Shoulder Flexion (180°)</p>
+        <div class="actions">
+          <a href="/start_exercise/1" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 2: Hyperextension</h4>
+<p class="subtitle">Hyperextension (50°)</p>
+        <div class="actions">
+          <a href="/start_exercise/2" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 3: Abduction</h4>
+<p class="subtitle">Abduction (180°)</p>
+        <div class="actions">
+          <a href="/start_exercise/3" class="btn">Start Exercise</a>
+        </div>
+      </div>
+
+      <div class="card exercise-card">
+        <h4>Level 4: Adduction</h4>
+<p class="subtitle">Adduction (50°)</p>
+        <div class="actions">
+          <a href="/start_exercise/4" class="btn">Start Exercise</a>
+        </div>
+      </div>
+      {% elif patient_id == 3 %}
+      <div class="card exercise-card">
+        <h4>Level 1: Elbow Flexion ({{ progress.level1 }}/10 reps)</h4>
+        <p class="subtitle">Target: 140°</p>
+        <div class="actions">
+          <a href="/start_exercise/1" class="btn">Start Exercise</a>
+        </div>
+      </div>
+      <div class="card exercise-card">
+        <h4>Level 2: Elbow Extension ({{ progress.level2 }}/10 reps)</h4>
+        <p class="subtitle">Target: 0°</p>
+        <div class="actions">
+          <a href="/start_exercise/2" class="btn">Start Exercise</a>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2025 PhysioCare AI</span>
+    </div>
+  </footer>
+</body>
+</html>
+

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coming Soon - PhysioCare AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+  <header class="site-header">
+    <div class="container">
+      <nav class="nav">
+        <a class="btn ghost" href="/patient/{{ patient_id }}">← Back</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <div class="card">
+      <h1>Shoulder Module Coming Soon</h1>
+      <p>{{ message }}</p>
+      <p>Patient #{{ patient_id }} - Level {{ level }}</p>
+      <div class="actions">
+        <a href="/patient/{{ patient_id }}" class="btn">Back to Exercises</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

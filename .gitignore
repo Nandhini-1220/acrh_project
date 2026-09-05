@@ -1,0 +1,6 @@
+venv/
+Lib/
+Scripts/
+__pycache__/
+*.pyc
+.envtest.py

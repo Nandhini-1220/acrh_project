@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient Room - PhysioCare AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+  <header class="site-header">
+    <div class="container">
+      <div class="brand">
+        <h1>Patient Room: {{ patient.name }}</h1>
+        <p class="subtitle">Progress Monitoring</p>
+      </div>
+      <nav class="nav">
+        <a class="btn ghost" href="/therapist">Dashboard</a>
+        <a class="btn secondary" href="/">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero card">
+      <div class="hero-text">
+        <h2>Patient Details</h2>
+        <p>ID: {{ patient.id }} | Injury: {{ patient.injury_type }}</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Level-wise Progress</h3>
+      <div class="grid">
+        <div class="card">
+          <h4>Level 1: {{ level_progress[0] }} / 10</h4>
+        </div>
+        <div class="card">
+          <h4>Level 2: {{ level_progress[1] }} / 10</h4>
+        </div>
+        <div class="card">
+          <h4>Level 3: {{ level_progress[2] }} / 10</h4>
+        </div>
+        <div class="card">
+          <h4>Level 4: {{ level_progress[3] }} / 10</h4>
+        </div>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ "%.0f"|format(overall) }}%"></div>
+        </div>
+        <p class="progress-text">Overall Progress: {{ "%.0f"|format(overall) }}%</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="/therapist">Back to Dashboard</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>© 2025 PhysioCare AI</span>
+    </div>
+  </footer>
+</body>
+</html>
+
