@@ -8,26 +8,56 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-in-production-12345'
 
 
+import sqlite3
+from werkzeug.security import check_password_hash
+
+def get_db_connection():
+    conn = sqlite3.connect('acrh.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         role = request.form.get('role')
-        patient_id = request.form.get('patient_id', '').strip()
+        user_id = request.form.get('user_id', '').strip()
+        passcode = request.form.get('passcode', '').strip()
         
-        if role == 'Patient':
-            if patient_id in ['1', '2', '3']:
-                session['role'] = 'patient'
-                session['patient_id'] = int(patient_id)
-                session.permanent = True
-                return redirect(url_for('patient', patient_id=int(patient_id)))
-            else:
-                flash('Invalid Patient ID')
-        elif role == 'Therapist':
-            session['role'] = 'therapist'
+        if not role or not user_id or not passcode:
+            flash('Please fill in all fields')
+            return render_template('login.html')
+            
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            flash('Invalid ID format')
+            return render_template('login.html')
+            
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE id = ? AND role = ?', 
+                            (user_id, role.upper())).fetchone()
+                            
+        if user and check_password_hash(user['password'], passcode):
             session.permanent = True
-            return redirect(url_for('therapist'))
+            session['user_id'] = user['id']
+            session['role'] = role.lower()
+            
+            if role == 'Patient':
+                # Also lookup the patient ID (from patients table) for legacy route compatibility
+                patient = conn.execute('SELECT id FROM patients WHERE user_id = ?', (user['id'],)).fetchone()
+                if patient:
+                    session['patient_id'] = patient['id']
+                    conn.close()
+                    return redirect(url_for('patient', patient_id=patient['id']))
+                else:
+                    flash('No patient record found for this user.')
+            elif role == 'Therapist':
+                conn.close()
+                return redirect(url_for('therapist'))
         else:
-            flash('Please select a valid role')
+            flash('Invalid ID, Role, or Passcode')
+            
+        conn.close()
     return render_template('login.html')
 
 

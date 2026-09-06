@@ -1,4 +1,6 @@
 import cv2
+from shared_ui import ExerciseUI
+ui_renderer = ExerciseUI()
 import mediapipe as mp
 import time
 import math
@@ -88,7 +90,7 @@ start_hold = None
 paused_time = 0
 pause_start = None
 session_start_time = time.time()
-exercise_phase = "setup"  # setup, warmup, exercise, rest, complete
+exercise_phase = "exercise"  # setup, warmup, exercise, rest, complete
 warmup_time = 10  # seconds
 rest_time = 3  # seconds between reps
 complete_start = None
@@ -490,7 +492,7 @@ while cap.isOpened():
             exercise_keys = EXERCISE_ORDER
             current_idx = exercise_keys.index(current_exercise)
             current_exercise = exercise_keys[(current_idx + 1) % len(exercise_keys)]
-            exercise_phase = "setup"
+            exercise_phase = "exercise"
             reps = 0
             start_hold = None
             paused_time = 0
@@ -712,53 +714,60 @@ while cap.isOpened():
             # Update last positions for tap detection
             last_finger_positions = tips.copy()
 
-    # Draw UI elements
-    h, w, _ = image.shape
-
-    instruction_text = get_exercise_instruction()
-    draw_instruction_box(image, instruction_text)
-
-    cv2.putText(image, f"Exercise: {exercise['name']}", (20, h - 140),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    cv2.putText(image, f"Reps: {reps}/{get_target_reps_for_current()}", (20, h - 110),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-
-    # Draw progress bars
-    if exercise_phase == "warmup" and warmup_start:
-        warmup_progress = min(1.0, (current_time - warmup_start) / warmup_time)
-        draw_progress_bar(image, warmup_progress, w - 250, 50, 200, 20, (0, 255, 255))
-        cv2.putText(image, "Warm-up Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-
-    elif exercise_phase == "exercise" and start_hold:
-        hold_progress = min(1.0, (current_time - start_hold + paused_time) / hold_time)
-        draw_progress_bar(image, hold_progress, w - 250, 50, 200, 20, exercise["color"])
-        cv2.putText(image, "Hold Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-
+    # Draw UI elements (Delegated to shared_ui.py)
+    progress_val = None
+    progress_title = ""
+    if exercise_phase == "exercise" and start_hold:
+        progress_val = min(1.0, (current_time - start_hold + paused_time) / hold_time)
+        progress_title = "Hold Progress"
     elif exercise_phase == "rest" and rest_start:
-        rest_progress = min(1.0, (current_time - rest_start) / rest_time)
-        draw_progress_bar(image, rest_progress, w - 250, 50, 200, 20, (255, 255, 0))
-        cv2.putText(image, "Rest Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-
-    if not hand_detected:
-        cv2.putText(image, "No hand detected - Position your hand in front of camera",
-                   (w//2 - 200, h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-    draw_session_stats(image)
-    draw_game_hud(image)
-
-    if show_help:
-        draw_help_screen(image)
-
-    if show_demo and exercise_phase == "setup":
-        draw_demo_mode(image)
-
-    cv2.putText(image, "Controls: 's'=start, 'd'=demo, 'n'=next, 'r'=restart, 'h'=help, 'm'=menu, ESC=exit",
-               (20, h - 70), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
-
-    cv2.imshow("Finger Physiotherapy Assistant", image)
+        progress_val = min(1.0, (current_time - rest_start) / rest_time)
+        progress_title = "Rest Progress"
+    elif exercise_phase == "warmup" and warmup_start:
+        try:
+            progress_val = min(1.0, (current_time - warmup_start) / warmup_time)
+            progress_title = "Warmup Progress"
+        except:
+            pass
+            
+    current_angle = None
+    if 'angle' in locals(): current_angle = locals()['angle']
+    elif 'shoulder_angle' in locals(): current_angle = locals()['shoulder_angle']
+    elif 'elbow_angle' in locals(): current_angle = locals()['elbow_angle']
+    elif 'rotation_angle' in locals(): current_angle = locals()['rotation_angle']
+    
+    feedback = ""
+    if 'bend_guidance' in locals() and locals()['bend_guidance']: feedback = locals()['bend_guidance']
+    elif 'rotation_guidance' in locals() and locals()['rotation_guidance']: feedback = locals()['rotation_guidance']
+    elif 'directional_guidance' in locals() and locals()['directional_guidance']: feedback = locals()['directional_guidance']
+    
+    if 'hand_detected' in locals() and not locals()['hand_detected']: feedback = "No hand detected. Position hand in camera."
+    elif 'arm_detected' in locals() and not locals()['arm_detected']: feedback = "No arm detected. Position arm in camera."
+    
+    try:
+        instr = get_exercise_instruction()
+    except:
+        instr = ""
+        
+    state = {
+        "exercise_name": exercise["name"],
+        "level": os.environ.get("LEVEL", "1"),
+        "instruction": instr,
+        "angle": current_angle,
+        "target_range": exercise.get("target_angle_range"),
+        "reps": reps,
+        "target_reps": target_reps,
+        "feedback_msg": feedback,
+        "progress": progress_val,
+        "progress_title": progress_title,
+        "session_duration": f"{int(session_stats.get('session_duration', 0) // 60):02d}:{int(session_stats.get('session_duration', 0) % 60):02d}",
+        "session_reps": session_stats.get('total_reps', 0)
+    }
+    
+    image = ui_renderer.render(image, state)
+    
+    cv2.namedWindow("Exercise", cv2.WINDOW_NORMAL)
+    cv2.imshow("Exercise", image)
 
     key = cv2.waitKey(1) & 0xFF
     if key == 27:  # ESC
@@ -769,7 +778,7 @@ while cap.isOpened():
         exercise_keys = EXERCISE_ORDER
         current_idx = exercise_keys.index(current_exercise)
         current_exercise = exercise_keys[(current_idx + 1) % len(exercise_keys)]
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0
@@ -779,7 +788,7 @@ while cap.isOpened():
         current_opposition_target = 0
         tapped_fingers = set()
     elif key == ord('r'):
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0

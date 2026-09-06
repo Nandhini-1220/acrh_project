@@ -1,4 +1,6 @@
 import cv2
+from shared_ui import ExerciseUI
+ui_renderer = ExerciseUI()
 import mediapipe as mp
 import time
 import math
@@ -14,7 +16,7 @@ EXERCISES = {
     "elbow_flexion": {
         "name": "Elbow Flexion",
         "description": "Bend your elbow to bring your hand toward your shoulder",
-        "detailed_instruction": "Slowly bend your elbow to bring your hand toward your shoulder. Keep your upper arm still, only move your forearm. Aim for 90-120° angle.",
+        "detailed_instruction": "Slowly bend your elbow to bring your hand toward your shoulder. Keep your upper arm still, only move your forearm. Aim for 90-120 angle.",
         "target_angle_range": (90, 120),
         "hold_time": 5,
         "color": (0, 255, 0),  # Green
@@ -24,7 +26,7 @@ EXERCISES = {
     "elbow_extension": {
         "name": "Elbow Extension",
         "description": "Straighten your elbow to extend your arm",
-        "detailed_instruction": "Slowly straighten your elbow to extend your arm. Keep your upper arm still, only move your forearm. Aim for 0-30° angle (straight arm).",
+        "detailed_instruction": "Slowly straighten your elbow to extend your arm. Keep your upper arm still, only move your forearm. Aim for 0-30 angle (straight arm).",
         "target_angle_range": (0, 30),
         "hold_time": 5,
         "color": (255, 0, 0),  # Blue
@@ -34,7 +36,7 @@ EXERCISES = {
     "elbow_rotation_inward": {
         "name": "Elbow Rotation (Inward)",
         "description": "Rotate your forearm inward (pronation)",
-        "detailed_instruction": "Keep your elbow bent at 90° and rotate your forearm inward so your palm faces down. Keep your upper arm still.",
+        "detailed_instruction": "Keep your elbow bent at 90 and rotate your forearm inward so your palm faces down. Keep your upper arm still.",
         "target_angle_range": (0, 90),
         "hold_time": 3,
         "color": (255, 165, 0),  # Orange
@@ -44,7 +46,7 @@ EXERCISES = {
     "elbow_rotation_outward": {
         "name": "Elbow Rotation (Outward)",
         "description": "Rotate your forearm outward (supination)",
-        "detailed_instruction": "Keep your elbow bent at 90° and rotate your forearm outward so your palm faces up. Keep your upper arm still.",
+        "detailed_instruction": "Keep your elbow bent at 90 and rotate your forearm outward so your palm faces up. Keep your upper arm still.",
         "target_angle_range": (0, 90),
         "hold_time": 3,
         "color": (128, 0, 128),  # Purple
@@ -54,7 +56,7 @@ EXERCISES = {
     "elbow_circles": {
         "name": "Elbow Circles",
         "description": "Make circular movements with your bent elbow",
-        "detailed_instruction": "Keep your elbow bent at 90° and make slow circular movements with your forearm. Keep your upper arm stable.",
+        "detailed_instruction": "Keep your elbow bent at 90 and make slow circular movements with your forearm. Keep your upper arm stable.",
         "target_angle_range": (0, 360),
         "hold_time": 2,
         "color": (0, 255, 128),  # Light Green
@@ -79,7 +81,7 @@ start_hold = None
 paused_time = 0
 pause_start = None
 session_start_time = time.time()
-exercise_phase = "setup"  # setup, warmup, exercise, rest, complete
+exercise_phase = "exercise"  # setup, warmup, exercise, rest, complete
 warmup_time = 10  # seconds
 rest_time = 3  # seconds between reps
 
@@ -226,11 +228,11 @@ def get_directional_guidance(angle, exercise_phase):
         if angle > 150:
             return "Bend your elbow MORE - bring hand toward shoulder"
         elif angle > max_angle:
-            return f"Good! Hold steady at {int(angle)}° - you should feel muscle engagement"
+            return f"Good! Hold steady at {int(angle)} - you should feel muscle engagement"
         elif min_angle <= angle <= max_angle:
-            return f"PERFECT! Hold at {int(angle)}° - you should feel your bicep working!"
+            return f"PERFECT! Hold at {int(angle)} - you should feel your bicep working!"
         elif angle < min_angle:
-            return f"Great bend! Hold steady at {int(angle)}°"
+            return f"Great bend! Hold steady at {int(angle)}"
         else:
             return "Ease back slightly - that's too much bend"
     
@@ -238,11 +240,11 @@ def get_directional_guidance(angle, exercise_phase):
         if angle > 30:
             return "Straighten your elbow MORE - extend your arm"
         elif angle > max_angle:
-            return f"Good extension! Hold steady at {int(angle)}°"
+            return f"Good extension! Hold steady at {int(angle)}"
         elif min_angle <= angle <= max_angle:
-            return f"PERFECT! Hold at {int(angle)}° - arm is straight!"
+            return f"PERFECT! Hold at {int(angle)} - arm is straight!"
         elif angle < min_angle:
-            return f"Excellent! Hold at {int(angle)}° - full extension!"
+            return f"Excellent! Hold at {int(angle)} - full extension!"
         else:
             return "Ease back slightly - don't hyperextend"
     
@@ -250,9 +252,9 @@ def get_directional_guidance(angle, exercise_phase):
         if angle < 30:
             return "Rotate your forearm MORE - turn your hand"
         elif min_angle <= angle <= max_angle:
-            return f"PERFECT! Hold at {int(angle)}° - good rotation!"
+            return f"PERFECT! Hold at {int(angle)} - good rotation!"
         else:
-            return f"Good rotation! Hold steady at {int(angle)}°"
+            return f"Good rotation! Hold steady at {int(angle)}"
     
     return ""
 
@@ -267,15 +269,15 @@ def get_exercise_instruction():
     elif exercise_phase == "exercise":
         if start_hold is None:
             if current_exercise == "elbow_flexion":
-                return f"Ready! Bend your elbow to bring hand toward shoulder\n\n{exercise['visual_cue']}\n\nHold when you reach 90-120° angle."
+                return f"Ready! Bend your elbow to bring hand toward shoulder\n\n{exercise['visual_cue']}\n\nHold when you reach 90-120 angle."
             elif current_exercise == "elbow_extension":
-                return f"Ready! Straighten your elbow to extend your arm\n\n{exercise['visual_cue']}\n\nHold when you reach 0-30° angle."
+                return f"Ready! Straighten your elbow to extend your arm\n\n{exercise['visual_cue']}\n\nHold when you reach 0-30 angle."
             elif current_exercise == "elbow_rotation_inward":
-                return f"Ready! Rotate your forearm INWARD (palm down)\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90°."
+                return f"Ready! Rotate your forearm INWARD (palm down)\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90."
             elif current_exercise == "elbow_rotation_outward":
-                return f"Ready! Rotate your forearm OUTWARD (palm up)\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90°."
+                return f"Ready! Rotate your forearm OUTWARD (palm up)\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90."
             elif current_exercise == "elbow_circles":
-                return f"Ready! Make CIRCLES with your forearm\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90°."
+                return f"Ready! Make CIRCLES with your forearm\n\n{exercise['visual_cue']}\n\nKeep elbow bent at 90."
         else:
             elapsed = time.time() - start_hold + paused_time
             remaining = hold_time - int(elapsed)
@@ -354,7 +356,7 @@ while cap.isOpened():
                                 mp_drawing.DrawingSpec(color=exercise["color"], thickness=2))
         
         # Draw angle indicator
-        cv2.putText(image, f"Elbow Angle: {int(elbow_angle)}°", (elbow_pt[0] - 50, elbow_pt[1] - 20),
+        cv2.putText(image, f"Elbow Angle: {int(elbow_angle)}", (elbow_pt[0] - 50, elbow_pt[1] - 20),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, exercise["color"], 2)
         
         # Draw directional guidance
@@ -418,7 +420,7 @@ while cap.isOpened():
         # Draw target zone indicator
         if exercise_phase == "exercise":
             min_angle, max_angle = exercise["target_angle_range"]
-            target_text = f"Target: {min_angle}-{max_angle}°"
+            target_text = f"Target: {min_angle}-{max_angle}"
             cv2.putText(image, target_text, (elbow_pt[0] - 50, elbow_pt[1] + 60),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, exercise["color"], 2)
             
@@ -481,51 +483,60 @@ while cap.isOpened():
                         paused_time = 0
                         pause_start = None
 
-    # Draw UI elements
-    h, w, _ = image.shape
-    
-    # Draw instruction box
-    instruction_text = get_exercise_instruction()
-    draw_instruction_box(image, instruction_text)
-    
-    # Draw exercise info
-    cv2.putText(image, f"Exercise: {exercise['name']}", (20, h - 120),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    cv2.putText(image, f"Reps: {reps}/{target_reps}", (20, h - 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    
-    # Draw progress bars
-    if exercise_phase == "warmup" and warmup_start:
-        warmup_progress = min(1.0, (current_time - warmup_start) / warmup_time)
-        draw_progress_bar(image, warmup_progress, w - 250, 50, 200, 20, (0, 255, 255))
-        cv2.putText(image, "Warm-up Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    
-    elif exercise_phase == "exercise" and start_hold:
-        hold_progress = min(1.0, (current_time - start_hold + paused_time) / hold_time)
-        draw_progress_bar(image, hold_progress, w - 250, 50, 200, 20, exercise["color"])
-        cv2.putText(image, "Hold Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    
+    # Draw UI elements (Delegated to shared_ui.py)
+    progress_val = None
+    progress_title = ""
+    if exercise_phase == "exercise" and start_hold:
+        progress_val = min(1.0, (current_time - start_hold + paused_time) / hold_time)
+        progress_title = "Hold Progress"
     elif exercise_phase == "rest" and rest_start:
-        rest_progress = min(1.0, (current_time - rest_start) / rest_time)
-        draw_progress_bar(image, rest_progress, w - 250, 50, 200, 20, (255, 255, 0))
-        cv2.putText(image, "Rest Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        progress_val = min(1.0, (current_time - rest_start) / rest_time)
+        progress_title = "Rest Progress"
+    elif exercise_phase == "warmup" and warmup_start:
+        try:
+            progress_val = min(1.0, (current_time - warmup_start) / warmup_time)
+            progress_title = "Warmup Progress"
+        except:
+            pass
+            
+    current_angle = None
+    if 'angle' in locals(): current_angle = locals()['angle']
+    elif 'shoulder_angle' in locals(): current_angle = locals()['shoulder_angle']
+    elif 'elbow_angle' in locals(): current_angle = locals()['elbow_angle']
+    elif 'rotation_angle' in locals(): current_angle = locals()['rotation_angle']
     
-    # Draw arm detection status
-    if not arm_detected:
-        cv2.putText(image, "No arm detected - Position your arm in front of camera", 
-                   (w//2 - 200, h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    feedback = ""
+    if 'bend_guidance' in locals() and locals()['bend_guidance']: feedback = locals()['bend_guidance']
+    elif 'rotation_guidance' in locals() and locals()['rotation_guidance']: feedback = locals()['rotation_guidance']
+    elif 'directional_guidance' in locals() and locals()['directional_guidance']: feedback = locals()['directional_guidance']
     
-    # Draw session statistics
-    draw_session_stats(image)
+    if 'hand_detected' in locals() and not locals()['hand_detected']: feedback = "No hand detected. Position hand in camera."
+    elif 'arm_detected' in locals() and not locals()['arm_detected']: feedback = "No arm detected. Position arm in camera."
     
-    # Draw controls
-    cv2.putText(image, "Controls: 's'=start, 'n'=next exercise, 'r'=restart, ESC=exit", 
-               (20, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
-
-    cv2.imshow("Elbow Exercise Assistant", image)
+    try:
+        instr = get_exercise_instruction()
+    except:
+        instr = ""
+        
+    state = {
+        "exercise_name": exercise["name"],
+        "level": os.environ.get("LEVEL", "1"),
+        "instruction": instr,
+        "angle": current_angle,
+        "target_range": exercise.get("target_angle_range"),
+        "reps": reps,
+        "target_reps": target_reps,
+        "feedback_msg": feedback,
+        "progress": progress_val,
+        "progress_title": progress_title,
+        "session_duration": f"{int(session_stats.get('session_duration', 0) // 60):02d}:{int(session_stats.get('session_duration', 0) % 60):02d}",
+        "session_reps": session_stats.get('total_reps', 0)
+    }
+    
+    image = ui_renderer.render(image, state)
+    
+    cv2.namedWindow("Exercise", cv2.WINDOW_NORMAL)
+    cv2.imshow("Exercise", image)
     
     # Handle key presses
     key = cv2.waitKey(1) & 0xFF
@@ -539,7 +550,7 @@ while cap.isOpened():
         exercise_keys = list(EXERCISES.keys())
         current_idx = exercise_keys.index(current_exercise)
         current_exercise = exercise_keys[(current_idx + 1) % len(exercise_keys)]
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0
@@ -548,7 +559,7 @@ while cap.isOpened():
         rotation_completed_degrees = 0
     elif key == ord('r'):
         # Restart current exercise
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0

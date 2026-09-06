@@ -1,4 +1,6 @@
 import cv2
+from shared_ui import ExerciseUI
+ui_renderer = ExerciseUI()
 import mediapipe as mp
 import time
 import math
@@ -14,7 +16,7 @@ EXERCISES = {
     "wrist_flexion": {
         "name": "Wrist Flexion",
         "description": "Bend your wrist forward (palm toward forearm)",
-        "detailed_instruction": "Bend your wrist forward as far as comfortable - aim for 50-70° angle. You should feel a gentle stretch in the back of your wrist.",
+        "detailed_instruction": "Bend your wrist forward as far as comfortable - aim for 50-70 angle. You should feel a gentle stretch in the back of your wrist.",
         "target_angle_range": (50, 70),
         "hold_time": 5,
         "color": (0, 255, 0),  # Green
@@ -24,7 +26,7 @@ EXERCISES = {
     "wrist_extension": {
         "name": "Wrist Extension", 
         "description": "Bend your wrist backward (back of hand toward forearm)",
-        "detailed_instruction": "Bend your wrist backward as far as comfortable - aim for 50-70° angle. You should feel a gentle stretch in the front of your wrist.",
+        "detailed_instruction": "Bend your wrist backward as far as comfortable - aim for 50-70 angle. You should feel a gentle stretch in the front of your wrist.",
         "target_angle_range": (50, 70),
         "hold_time": 5,
         "color": (255, 0, 0),  # Red
@@ -34,7 +36,7 @@ EXERCISES = {
     "radial_deviation": {
         "name": "Radial Deviation",
         "description": "Bend your wrist toward your thumb side",
-        "detailed_instruction": "Bend your wrist toward your thumb side as far as comfortable - aim for 10-30° angle. Keep your forearm still, only move your wrist.",
+        "detailed_instruction": "Bend your wrist toward your thumb side as far as comfortable - aim for 10-30 angle. Keep your forearm still, only move your wrist.",
         "target_angle_range": (10, 30),
         "hold_time": 5,
         "color": (0, 255, 255),  # Cyan
@@ -44,7 +46,7 @@ EXERCISES = {
     "ulnar_deviation": {
         "name": "Ulnar Deviation",
         "description": "Bend your wrist toward your pinky side",
-        "detailed_instruction": "Bend your wrist toward your pinky side as far as comfortable - aim for 10-30° angle. Keep your forearm still, only move your wrist.",
+        "detailed_instruction": "Bend your wrist toward your pinky side as far as comfortable - aim for 10-30 angle. Keep your forearm still, only move your wrist.",
         "target_angle_range": (10, 30),
         "hold_time": 5,
         "color": (255, 0, 255),  # Magenta
@@ -105,7 +107,7 @@ start_hold = None
 paused_time = 0
 pause_start = None
 session_start_time = time.time()
-exercise_phase = "setup"  # setup, exercise, rest, complete
+exercise_phase = "exercise"  # setup, exercise, rest, complete
 rest_time = 3  # seconds between reps
 
 # Session tracking
@@ -238,9 +240,9 @@ def get_bend_guidance(angle, exercise_phase, exercise_name, min_angle, max_angle
         elif "ulnar" in exercise_name:
             return "Bend LEFT (pinky side)"
     elif angle < min_angle:
-        return f"Bend MORE! {int(angle)}° → need {min_angle}-{max_angle}°"
+        return f"Bend MORE! {int(angle)} → need {min_angle}-{max_angle}"
     elif angle <= max_angle:
-        return f"PERFECT! Hold at {int(angle)}°"
+        return f"PERFECT! Hold at {int(angle)}"
     else:
         return "Ease BACK a bit"
 
@@ -252,11 +254,11 @@ def get_rotation_guidance(rotation_angle, exercise_phase):
     exercise = EXERCISES[current_exercise]
     
     if current_exercise == "wrist_rotation_clockwise":
-        return f"Rotate CLOCKWISE! {rotation_completed_degrees:.0f}° done"
+        return f"Rotate CLOCKWISE! {rotation_completed_degrees:.0f} done"
     elif current_exercise == "wrist_rotation_counterclockwise":
-        return f"Rotate CCW! {rotation_completed_degrees:.0f}° done"
+        return f"Rotate CCW! {rotation_completed_degrees:.0f} done"
     elif current_exercise == "wrist_circles":
-        return f"CIRCLES! {rotation_completed_degrees:.0f}° done"
+        return f"CIRCLES! {rotation_completed_degrees:.0f} done"
     
     return ""
 
@@ -355,7 +357,7 @@ while cap.isOpened():
             if exercise_type in ['rotation', 'circles']:
                 # Rotation exercises
                 rotation_angle = calculate_rotation_angle(wrist_pt, middle_pt, index_pt)
-                cv2.putText(image, f"Rotation: {int(rotation_angle)}°", (wrist_pt[0] - 50, wrist_pt[1] - 20),
+                cv2.putText(image, f"Rotation: {int(rotation_angle)}", (wrist_pt[0] - 50, wrist_pt[1] - 20),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, exercise["color"], 2)
                 
                 rotation_guidance = get_rotation_guidance(rotation_angle, exercise_phase)
@@ -418,7 +420,7 @@ while cap.isOpened():
             elif exercise_type == 'bend':
                 # Bend exercises (flexion/extension/deviation)
                 angle = calculate_angle(index_mcp_pt, wrist_pt, index_pt)
-                cv2.putText(image, f"Angle: {int(angle)}°", (wrist_pt[0] - 50, wrist_pt[1] - 20),
+                cv2.putText(image, f"Angle: {int(angle)}", (wrist_pt[0] - 50, wrist_pt[1] - 20),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, exercise["color"], 2)
                 
                 min_angle, max_angle = exercise["target_angle_range"]
@@ -447,7 +449,7 @@ while cap.isOpened():
                         cv2.putText(image, "BEND LEFT", (arrow_center[0] - arrow_size//2 - 70, arrow_center[1] + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, exercise["color"], 2)
                 
                 # Target zone
-                cv2.putText(image, f"Target: {min_angle}-{max_angle}°", (wrist_pt[0] - 50, wrist_pt[1] + 60),
+                cv2.putText(image, f"Target: {min_angle}-{max_angle}", (wrist_pt[0] - 50, wrist_pt[1] + 60),
                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, exercise["color"], 2)
                 
                 # Bend logic
@@ -469,45 +471,60 @@ while cap.isOpened():
                     if start_hold is not None:
                         start_hold = None  # Reset hold if out of range
 
-    # Draw UI elements
-    h, w, _ = image.shape
-    
-    # Draw instruction box
-    instruction_text = get_exercise_instruction()
-    draw_instruction_box(image, instruction_text)
-    
-    # Draw exercise info
-    cv2.putText(image, f"Exercise: {exercise['name']}", (20, h - 120),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    cv2.putText(image, f"Reps: {reps}/{target_reps}", (20, h - 90),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    
-    # Draw progress bars
+    # Draw UI elements (Delegated to shared_ui.py)
+    progress_val = None
+    progress_title = ""
     if exercise_phase == "exercise" and start_hold:
-        hold_progress = min(1.0, (current_time - start_hold) / hold_time)
-        draw_progress_bar(image, hold_progress, w - 250, 50, 200, 20, exercise["color"])
-        cv2.putText(image, "Hold Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    
+        progress_val = min(1.0, (current_time - start_hold + paused_time) / hold_time)
+        progress_title = "Hold Progress"
     elif exercise_phase == "rest" and rest_start:
-        rest_progress = min(1.0, (current_time - rest_start) / rest_time)
-        draw_progress_bar(image, rest_progress, w - 250, 50, 200, 20, (255, 255, 0))
-        cv2.putText(image, "Rest Progress", (w - 250, 40),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        progress_val = min(1.0, (current_time - rest_start) / rest_time)
+        progress_title = "Rest Progress"
+    elif exercise_phase == "warmup" and warmup_start:
+        try:
+            progress_val = min(1.0, (current_time - warmup_start) / warmup_time)
+            progress_title = "Warmup Progress"
+        except:
+            pass
+            
+    current_angle = None
+    if 'angle' in locals(): current_angle = locals()['angle']
+    elif 'shoulder_angle' in locals(): current_angle = locals()['shoulder_angle']
+    elif 'elbow_angle' in locals(): current_angle = locals()['elbow_angle']
+    elif 'rotation_angle' in locals(): current_angle = locals()['rotation_angle']
     
-    # Draw hand detection status
-    if not hand_detected:
-        cv2.putText(image, "No hand detected - Position your hand in front of camera", 
-                   (w//2 - 200, h//2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    feedback = ""
+    if 'bend_guidance' in locals() and locals()['bend_guidance']: feedback = locals()['bend_guidance']
+    elif 'rotation_guidance' in locals() and locals()['rotation_guidance']: feedback = locals()['rotation_guidance']
+    elif 'directional_guidance' in locals() and locals()['directional_guidance']: feedback = locals()['directional_guidance']
     
-    # Draw session statistics
-    draw_session_stats(image)
+    if 'hand_detected' in locals() and not locals()['hand_detected']: feedback = "No hand detected. Position hand in camera."
+    elif 'arm_detected' in locals() and not locals()['arm_detected']: feedback = "No arm detected. Position arm in camera."
     
-    # Draw controls
-    cv2.putText(image, "Controls: 's'=start, 'n'=next exercise, 'r'=restart, ESC=exit", 
-               (20, h - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
-
-    cv2.imshow("Wrist Rotation Exercise Assistant", image)
+    try:
+        instr = get_exercise_instruction()
+    except:
+        instr = ""
+        
+    state = {
+        "exercise_name": exercise["name"],
+        "level": os.environ.get("LEVEL", "1"),
+        "instruction": instr,
+        "angle": current_angle,
+        "target_range": exercise.get("target_angle_range"),
+        "reps": reps,
+        "target_reps": target_reps,
+        "feedback_msg": feedback,
+        "progress": progress_val,
+        "progress_title": progress_title,
+        "session_duration": f"{int(session_stats.get('session_duration', 0) // 60):02d}:{int(session_stats.get('session_duration', 0) % 60):02d}",
+        "session_reps": session_stats.get('total_reps', 0)
+    }
+    
+    image = ui_renderer.render(image, state)
+    
+    cv2.namedWindow("Exercise", cv2.WINDOW_NORMAL)
+    cv2.imshow("Exercise", image)
     
     # Handle key presses
     key = cv2.waitKey(1) & 0xFF
@@ -520,7 +537,7 @@ while cap.isOpened():
         exercise_keys = list(EXERCISES.keys())
         current_idx = exercise_keys.index(current_exercise)
         current_exercise = exercise_keys[(current_idx + 1) % len(exercise_keys)]
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0
@@ -529,7 +546,7 @@ while cap.isOpened():
         rotation_completed_degrees = 0
     elif key == ord('r'):
         # Restart current exercise
-        exercise_phase = "setup"
+        exercise_phase = "exercise"
         reps = 0
         start_hold = None
         paused_time = 0
