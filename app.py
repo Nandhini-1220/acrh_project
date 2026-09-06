@@ -20,53 +20,146 @@ def get_db_connection():
 def index():
     if request.method == 'POST':
         role = request.form.get('role')
-        user_id = request.form.get('user_id', '').strip()
-        passcode = request.form.get('passcode', '').strip()
         
-        if not role or not user_id or not passcode:
-            flash('Please fill in all fields')
-            return render_template('login.html')
+        if role == 'Patient':
+            patient_id = request.form.get('patient_id', '').strip()
+            if not patient_id:
+                flash('Please enter your Patient ID')
+                return render_template('login.html')
+                
+            try:
+                patient_id = int(patient_id)
+            except ValueError:
+                flash('Invalid Patient ID format')
+                return render_template('login.html')
+                
+            conn = get_db_connection()
+            db_patient = conn.execute('''
+                SELECT p.id as patient_id, u.id as user_id 
+                FROM patients p
+                JOIN users u ON p.user_id = u.id
+                WHERE p.id = ? AND u.role = 'PATIENT'
+            ''', (patient_id,)).fetchone()
+            conn.close()
             
-        try:
-            user_id = int(user_id)
-        except ValueError:
-            flash('Invalid ID format')
-            return render_template('login.html')
+            if db_patient:
+                session.permanent = True
+                session['user_id'] = db_patient['user_id']
+                session['role'] = 'patient'
+                session['patient_id'] = db_patient['patient_id']
+                return redirect(url_for('patient', patient_id=db_patient['patient_id']))
+            else:
+                flash('Invalid Patient ID')
+                
+        elif role == 'Therapist':
+            email = request.form.get('therapist_email', '').strip()
+            if not email:
+                flash('Please enter your Email')
+                return render_template('login.html')
+                
+            conn = get_db_connection()
+            user = conn.execute('SELECT id FROM users WHERE email = ? AND role = ?', 
+                                (email, 'THERAPIST')).fetchone()
+            conn.close()
             
-        conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE id = ? AND role = ?', 
-                            (user_id, role.upper())).fetchone()
-                            
-        if user and check_password_hash(user['password'], passcode):
-            session.permanent = True
-            session['user_id'] = user['id']
-            session['role'] = role.lower()
-            
-            if role == 'Patient':
-                # Also lookup the patient ID (from patients table) for legacy route compatibility
-                patient = conn.execute('SELECT id FROM patients WHERE user_id = ?', (user['id'],)).fetchone()
-                if patient:
-                    session['patient_id'] = patient['id']
-                    conn.close()
-                    return redirect(url_for('patient', patient_id=patient['id']))
-                else:
-                    flash('No patient record found for this user.')
-            elif role == 'Therapist':
-                conn.close()
+            if user:
+                session.permanent = True
+                session['user_id'] = user['id']
+                session['role'] = 'therapist'
                 return redirect(url_for('therapist'))
+            else:
+                flash('Invalid Therapist Email')
         else:
-            flash('Invalid ID, Role, or Passcode')
+            flash('Please select a valid role')
             
-        conn.close()
     return render_template('login.html')
 
+
+def get_patient_progress(patient_id):
+    # Get legacy progress
+    with open('data.json', 'r') as f:
+        patients_data = json.load(f)
+    patient_data = next((p for p in patients_data if p['id'] == patient_id), None)
+    
+    levels = [0, 0, 0, 0]
+    if patient_data:
+        levels = [
+            patient_data.get('level1', 0),
+            patient_data.get('level2', 0),
+            patient_data.get('level3', 0),
+            patient_data.get('level4', 0)
+        ]
+        
+    # Combine with new SQLite sessions (take max reps for each level)
+    conn = get_db_connection()
+    sessions = conn.execute('''
+        SELECT level, MAX(repetitions) as max_reps 
+        FROM exercise_sessions 
+        WHERE patient_id = ? AND completed = 1
+        GROUP BY level
+    ''', (patient_id,)).fetchall()
+    conn.close()
+    
+    for row in sessions:
+        try:
+            lvl_idx = int(row['level']) - 1
+            if 0 <= lvl_idx < 4:
+                levels[lvl_idx] = max(levels[lvl_idx], row['max_reps'])
+        except (ValueError, TypeError):
+            pass
+            
+    overall = min(100.0, (sum(levels) / 40.0) * 100)
+    
+    return {
+        'level1': levels[0],
+        'level2': levels[1],
+        'level3': levels[2],
+        'level4': levels[3],
+        'overall': overall,
+        'levels_array': levels
+    }
+
+def record_exercise_session(patient_id, exercise_key, level, repetitions, score=0, completed=True):
+    conn = get_db_connection()
+    formatted_name = " ".join([word.capitalize() for word in exercise_key.split('_')])
+    exercise = conn.execute('SELECT id FROM exercises WHERE name = ?', (formatted_name,)).fetchone()
+    
+    if exercise:
+        conn.execute('''
+            INSERT INTO exercise_sessions 
+            (patient_id, exercise_id, level, repetitions, score, completed) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (patient_id, exercise['id'], level, repetitions, score, completed))
+        conn.commit()
+    else:
+        print(f"Warning: Exercise '{formatted_name}' not found in database.")
+    conn.close()
 
 @app.route('/therapist')
 def therapist():
     if 'role' not in session or session['role'] != 'therapist':
         return redirect(url_for('patient', patient_id=1))
-    with open('data.json', 'r') as f:
-        patients = json.load(f)
+        
+    # Get patient info from DB
+    conn = get_db_connection()
+    db_patients = conn.execute('''
+        SELECT p.id, u.name, p.injury_type, p.affected_area
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+    ''').fetchall()
+    conn.close()
+    
+    patients = []
+    for row in db_patients:
+        prog = get_patient_progress(row['id'])
+        patients.append({
+            'id': row['id'],
+            'name': row['name'],
+            'injury_type': row['injury_type'],
+            'affected_area': row['affected_area'],
+            'progress': prog['overall']
+        })
+        
     return render_template('therapist_dashboard.html', patients=patients)
 
 
@@ -74,39 +167,57 @@ def therapist():
 def patient(patient_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('therapist'))
+        
+    if session.get('patient_id') and session['patient_id'] != patient_id:
+        pass # Allow permissive legacy routing
     
-    with open('data.json', 'r') as f:
-        patients_data = json.load(f)
+    # Get identity from DB
+    conn = get_db_connection()
+    db_patient = conn.execute('''
+        SELECT p.id, u.name, p.injury_type 
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.id = ?
+    ''', (patient_id,)).fetchone()
+    conn.close()
     
-    patient_data = next((p for p in patients_data if p['id'] == patient_id), None)
-    if patient_data:
-        progress = {
-            'level1': patient_data.get('level1', 0),
-            'level2': patient_data.get('level2', 0),
-            'level3': patient_data.get('level3', 0),
-            'level4': patient_data.get('level4', 0)
-        }
-    else:
-        progress = {'level1': 0, 'level2': 0, 'level3': 0, 'level4': 0}
+    if not db_patient:
+        flash('Patient not found.')
+        return redirect(url_for('index'))
+        
+    injury = db_patient['injury_type'].lower() if db_patient['injury_type'] else 'unknown'
+    progress = get_patient_progress(patient_id)
     
-    injury = patient_data['injury_type'].lower() if patient_data else 'unknown'
-    return render_template('patient_levels.html', patient_id=patient_id, injury=injury, progress=progress)
+    return render_template('patient_levels.html', patient_id=patient_id, patient_name=db_patient['name'], injury=injury, progress=progress)
 
 @app.route('/patient_room/<int:patient_id>')
 def patient_room(patient_id):
     if 'role' not in session or session['role'] != 'therapist':
         return redirect(url_for('patient', patient_id=1))
-    with open('data.json', 'r') as f:
-        patients = json.load(f)
-    patient = next(p for p in patients if p['id'] == patient_id)
-    level_progress = [
-        patient.get('level1', 0),
-        patient.get('level2', 0),
-        patient.get('level3', 0),
-        patient.get('level4', 0)
-    ]
-    overall = sum(level_progress) / 40 * 100
-    return render_template('patient_room.html', patient=patient, level_progress=level_progress, overall=overall)
+        
+    # Get identity from DB
+    conn = get_db_connection()
+    db_patient = conn.execute('''
+        SELECT p.id, u.name, p.injury_type 
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.id = ?
+    ''', (patient_id,)).fetchone()
+    conn.close()
+    
+    if not db_patient:
+        flash('Patient not found.')
+        return redirect(url_for('therapist'))
+        
+    patient = {
+        'id': db_patient['id'],
+        'name': db_patient['name'],
+        'injury_type': db_patient['injury_type']
+    }
+    
+    prog = get_patient_progress(patient_id)
+    
+    return render_template('patient_room.html', patient=patient, level_progress=prog['levels_array'], overall=prog['overall'])
 
 
 @app.route("/start_exercise/<int:level>")
@@ -184,49 +295,49 @@ def exercise_detail(exercise_key: str):
     exercise_map = {
         "wrist_flexion": {
             "name": "Wrist Flexion",
-            "instruction": "Bend your wrist forward up to 60°",
+            "instruction": "Bend your wrist forward up to 60 degrees",
             "target": (50, 60),
             "type": "wrist"
         },
         "wrist_extension": {
             "name": "Wrist Extension",
-            "instruction": "Bend your wrist backward up to 60°",
+            "instruction": "Bend your wrist backward up to 60A",
             "target": (50, 60),
             "type": "wrist"
         },
         "radial_deviation": {
             "name": "Radial Deviation",
-            "instruction": "Move wrist toward thumb side up to 20°",
+            "instruction": "Move wrist toward thumb side up to 20A",
             "target": (15, 20),
             "type": "wrist"
         },
         "ulnar_deviation": {
             "name": "Ulnar Deviation",
-            "instruction": "Move wrist toward pinky side up to 20°",
+            "instruction": "Move wrist toward pinky side up to 20A",
             "target": (15, 20),
             "type": "wrist"
         },
         "shoulder_flexion": {
             "name": "Shoulder Flexion",
-            "instruction": "Raise your arm forward up to 180°",
+            "instruction": "Raise your arm forward up to 180A",
             "target": (160, 180),
             "type": "shoulder"
         },
         "shoulder_hyperextension": {
             "name": "Shoulder Hyperextension",
-            "instruction": "Move your arm backward up to 50°",
+            "instruction": "Move your arm backward up to 50A",
             "target": (30, 50),
             "type": "shoulder"
         },
         "shoulder_abduction": {
             "name": "Shoulder Abduction",
-            "instruction": "Raise your arm sideways up to 180°",
+            "instruction": "Raise your arm sideways up to 180A",
             "target": (160, 180),
             "type": "shoulder"
         },
         "shoulder_adduction": {
             "name": "Shoulder Adduction",
-            "instruction": "Bring your arm toward your body up to 50°",
+            "instruction": "Bring your arm toward your body up to 50A",
             "target": (30, 50),
             "type": "shoulder"
         },
@@ -258,26 +369,15 @@ def feedback():
     
     if request.method == 'POST':
         reps = int(request.form.get('reps', 0))
-        level_key = f'level{level}'
         
-        # Load data.json
-        with open('data.json', 'r') as f:
-            patients_data = json.load(f)
-        
-        # Update reps for patient
-        for p in patients_data:
-            if p['id'] == patient_id:
-                p[level_key] = reps
-                # Update overall progress (average of levels / 40 * 100)
-                levels_sum = sum(p.get(f'level{i}', 0) for i in range(1,5))
-                p['progress'] = (levels_sum / 40) * 100
-                break
-        
-        # Save back
-        with open('data.json', 'w') as f:
-            json.dump(patients_data, f, indent=2)
-        
-        flash(f'Progress saved: {reps} reps for {level_key}')
+        # Save newly recorded session into SQLite
+        try:
+            record_exercise_session(patient_id, exercise_key, level, reps, score=0, completed=True)
+            flash(f'Session saved: {reps} reps for Level {level}!')
+        except Exception as e:
+            print("Error recording session:", e)
+            flash('Error recording progress. Please try again.')
+            
         return redirect(url_for('patient', patient_id=patient_id))
     
     return render_template("feedback.html", exercise_key=exercise_key, patient_id=patient_id, level=level)

@@ -16,33 +16,58 @@
           <div class="alert error">{{ messages[0] }}</div>
         {% endif %}
       {% endwith %}
-      <p>Select your role and enter your Development ID and Passcode.</p>
-      <div style="background-color: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.9em;">
-        <strong>Dev Credentials:</strong><br>
-        Patient IDs: 1, 2, 3, 4, 5<br>
-        Therapist ID: 6<br>
-        Passcode for all: dev123
-      </div>
+      <p>Select your role to access your rehabilitation workspace.</p>
+      
       <form method="POST" action="/">
         <div class="form-group">
           <label for="role">Select Role</label>
-          <select id="role" name="role" class="form-control" required style="color: #333; background-color: white;">
+          <select id="role" name="role" class="form-control" required style="color: #333; background-color: white;" onchange="toggleFields()">
             <option value="">Choose...</option>
             <option value="Patient">Patient</option>
             <option value="Therapist">Therapist</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="user_id">User ID (Patient or Therapist ID)</label>
-          <input type="number" id="user_id" name="user_id" min="1" max="999" placeholder="e.g. 1" required>
+        
+        <div class="form-group" id="patient_id_group" style="display: none;">
+          <label for="patient_id">Patient ID</label>
+          <input type="number" id="patient_id" name="patient_id" min="1" max="999" placeholder="Enter your Patient ID">
         </div>
-        <div class="form-group">
-          <label for="passcode">Development Passcode</label>
-          <input type="password" id="passcode" name="passcode" placeholder="Enter passcode" required>
+        
+        <div class="form-group" id="therapist_email_group" style="display: none;">
+          <label for="therapist_email">Therapist Email</label>
+          <input type="email" id="therapist_email" name="therapist_email" placeholder="Enter your email">
         </div>
+        
         <button type="submit" class="login-btn btn">Sign In</button>
       </form>
     </div>
   </div>
+
+  <script>
+    function toggleFields() {
+      const role = document.getElementById('role').value;
+      const patientGroup = document.getElementById('patient_id_group');
+      const therapistGroup = document.getElementById('therapist_email_group');
+      const patientInput = document.getElementById('patient_id');
+      const therapistInput = document.getElementById('therapist_email');
+      
+      if (role === 'Patient') {
+        patientGroup.style.display = 'block';
+        therapistGroup.style.display = 'none';
+        patientInput.required = true;
+        therapistInput.required = false;
+      } else if (role === 'Therapist') {
+        patientGroup.style.display = 'none';
+        therapistGroup.style.display = 'block';
+        patientInput.required = false;
+        therapistInput.required = true;
+      } else {
+        patientGroup.style.display = 'none';
+        therapistGroup.style.display = 'none';
+        patientInput.required = false;
+        therapistInput.required = false;
+      }
+    }
+  </script>
 </body>
 </html>
