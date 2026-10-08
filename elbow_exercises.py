@@ -569,6 +569,23 @@ while cap.isOpened():
         rotation_start_angle = None
         rotation_completed_degrees = 0
 
+# Send session stats to Flask API if configured
+api_url = os.environ.get("API_URL")
+api_token = os.environ.get("API_TOKEN")
+
+if api_url and api_token:
+    payload = {
+        "token": api_token,
+        "repetitions": session_stats.get("total_reps", 0),
+        "completed": exercise_phase == "complete"
+    }
+    try:
+        import requests
+        print(f"Sending session data to {api_url}")
+        requests.post(api_url, json=payload, timeout=3)
+    except Exception as e:
+        print(f"Failed to record session via API: {e}")
+
 cap.release()
 cv2.destroyAllWindows()
 

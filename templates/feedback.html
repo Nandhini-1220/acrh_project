@@ -23,7 +23,8 @@
     <section class="card">
       <h3>Session summary</h3>
       <p>You finished: <strong>{{ exercise_key or 'your exercise' }}</strong></p>
-      <p>Enter reps completed to save progress:</p>
+      <p><em>Your exercise result is recorded automatically when the camera window closes.</em></p>
+      <p>If the camera disconnected or you need to log manually, enter reps completed:</p>
       <form method="POST">
         <div class="form-group">
           <label for="reps">Reps completed (Level {{ level }}):</label>

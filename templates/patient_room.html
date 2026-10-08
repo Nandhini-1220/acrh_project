@@ -54,6 +54,40 @@
         <a class="btn" href="/therapist">Back to Dashboard</a>
       </div>
     </section>
+
+    <section class="card">
+      <h3>Assign New Exercise</h3>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="alert error">{{ messages[0] }}</div>
+        {% endif %}
+      {% endwith %}
+      <form method="POST" action="/assign_exercise/{{ patient.id }}">
+        <div class="form-group">
+          <label for="exercise_id">Select Exercise</label>
+          <select id="exercise_id" name="exercise_id" class="form-control" required style="color: #333; background-color: white;">
+            <option value="">Choose...</option>
+            {% for ex in exercises %}
+            <option value="{{ ex.id }}">{{ ex.name }} ({{ ex.body_part|capitalize }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="level">Level</label>
+          <select id="level" name="level" class="form-control" required style="color: #333; background-color: white;">
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+            <option value="4">Level 4</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="target_repetitions">Target Repetitions</label>
+          <input type="number" id="target_repetitions" name="target_repetitions" min="1" max="100" value="10" required>
+        </div>
+        <button type="submit" class="btn">Assign Exercise</button>
+      </form>
+    </section>
   </main>
 
   <footer class="site-footer">

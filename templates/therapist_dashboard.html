@@ -37,7 +37,10 @@
         {% for patient in patients %}
         <div class="card patient-card">
           <h4>{{ patient.name }}</h4>
-          <p class="subtitle">{{ patient.injury_type }}</p>
+          <p class="subtitle" style="margin-bottom: 5px;">{{ patient.injury_type }}</p>
+          <p style="font-size: 0.9em; margin-bottom: 5px;"><strong>Assigned:</strong> {{ patient.assigned_count }} | <strong>Completed:</strong> {{ patient.completed_assignments_count }}</p>
+          <p style="font-size: 0.9em; margin-bottom: 15px;"><strong>Latest Activity:</strong> {{ patient.latest_activity }}</p>
+          
           <div class="progress-container">
             <div class="progress-bar">
               <div class="progress-fill" style="width: {{ patient.progress }}%"></div>

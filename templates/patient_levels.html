@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -10,7 +10,7 @@
   <header class="site-header">
     <div class="container">
       <div class="brand">
-        <h1>Patient: {{ patient_name }} (ID: {{ patient_id }})</h1>
+        <h1>Welcome, {{ patient_name }}</h1>
         <p class="subtitle">Choose your exercise level</p>
       </div>
       <nav class="nav">
@@ -21,95 +21,60 @@
   </header>
 
   <main class="container">
-    <section class="grid">
-      {% if patient_id == 1 %}
-      <div class="card exercise-card">
-        <h4>Level 1: Wrist Flexion ({{ progress.level1 }}/10 reps)</h4>
-        <p class="subtitle">Bend wrist forward 50-70°</p>
-        <div class="actions">
-          <a href="/start_exercise/1" class="btn">Start Exercise</a>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert success" style="margin-bottom: 20px; padding: 15px; background: #d4edda; color: #155724; border-radius: 4px;">
+          {{ messages[0] }}
         </div>
-      </div>
+      {% endif %}
+    {% endwith %}
 
-      <div class="card exercise-card">
-        <h4>Level 2: Wrist Extension ({{ progress.level2 }}/10 reps)</h4>
-        <p class="subtitle">Bend wrist backward 50-70°</p>
-        <div class="actions">
-          <a href="/start_exercise/2" class="btn">Start Exercise</a>
+    <section style="margin-bottom: 40px;">
+      <h2>Assigned Exercises</h2>
+      
+      {% if assigned_exercises %}
+      <div class="grid">
+        {% for assignment in assigned_exercises %}
+        <div class="card exercise-card" style="border: 2px solid #0056b3;">
+          <h4>{{ assignment.exercise_name }}</h4>
+          <p class="subtitle" style="margin-bottom: 5px;">
+            <strong>Body Part:</strong> {{ assignment.body_part|capitalize }}<br>
+            <strong>Level:</strong> {{ assignment.level }}<br>
+            <strong>Target:</strong> {{ assignment.target_repetitions }} reps
+          </p>
+          <p class="subtitle">{{ assignment.instructions }}</p>
+          
+          <div style="margin-top: 15px; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: 0.95em;">
+            {% if assignment.latest_reps is not none %}
+              {% set pct = (assignment.latest_reps / assignment.target_repetitions * 100)|int if assignment.target_repetitions > 0 else 100 %}
+              {% set pct = 100 if pct > 100 else pct %}
+              <div style="margin-bottom: 5px;"><strong>Latest Session:</strong> {{ assignment.latest_reps }} / {{ assignment.target_repetitions }} reps</div>
+              <div class="progress-bar" style="margin-bottom: 5px;">
+                <div class="progress-fill" style="width: {{ pct }}%"></div>
+              </div>
+              <div><strong>Performance:</strong> {{ pct }}%</div>
+            {% else %}
+              <strong>Not completed yet</strong>
+            {% endif %}
+          </div>
+          
+          <div class="actions">
+            <a href="/exercise/{{ assignment.exercise_name|lower|replace(' ', '_') }}?level={{ assignment.level }}" class="btn" style="background-color: #0056b3; color: white;">Start Exercise</a>
+          </div>
         </div>
+        {% endfor %}
       </div>
-
-      <div class="card exercise-card">
-        <h4>Level 3: Radial Deviation ({{ progress.level3 }}/10 reps)</h4>
-        <p class="subtitle">Bend wrist toward thumb 10-30°</p>
-        <div class="actions">
-          <a href="/start_exercise/3" class="btn">Start Exercise</a>
-        </div>
-      </div>
-
-      <div class="card exercise-card">
-        <h4>Level 4: Ulnar Deviation ({{ progress.level4 }}/10 reps)</h4>
-        <p class="subtitle">Bend wrist toward pinky 10-30°</p>
-        <div class="actions">
-          <a href="/start_exercise/4" class="btn">Start Exercise</a>
-        </div>
-      </div>
-      {% elif patient_id == 2 %}
-      <div class="card exercise-card">
-        <h4>Level 1: Shoulder Flexion</h4>
-<p class="subtitle">Shoulder Flexion (180°)</p>
-        <div class="actions">
-          <a href="/start_exercise/1" class="btn">Start Exercise</a>
-        </div>
-      </div>
-
-      <div class="card exercise-card">
-        <h4>Level 2: Hyperextension</h4>
-<p class="subtitle">Hyperextension (50°)</p>
-        <div class="actions">
-          <a href="/start_exercise/2" class="btn">Start Exercise</a>
-        </div>
-      </div>
-
-      <div class="card exercise-card">
-        <h4>Level 3: Abduction</h4>
-<p class="subtitle">Abduction (180°)</p>
-        <div class="actions">
-          <a href="/start_exercise/3" class="btn">Start Exercise</a>
-        </div>
-      </div>
-
-      <div class="card exercise-card">
-        <h4>Level 4: Adduction</h4>
-<p class="subtitle">Adduction (50°)</p>
-        <div class="actions">
-          <a href="/start_exercise/4" class="btn">Start Exercise</a>
-        </div>
-      </div>
-      {% elif patient_id == 3 %}
-      <div class="card exercise-card">
-        <h4>Level 1: Elbow Flexion ({{ progress.level1 }}/10 reps)</h4>
-        <p class="subtitle">Target: 140°</p>
-        <div class="actions">
-          <a href="/start_exercise/1" class="btn">Start Exercise</a>
-        </div>
-      </div>
-      <div class="card exercise-card">
-        <h4>Level 2: Elbow Extension ({{ progress.level2 }}/10 reps)</h4>
-        <p class="subtitle">Target: 0°</p>
-        <div class="actions">
-          <a href="/start_exercise/2" class="btn">Start Exercise</a>
-        </div>
-      </div>
+      {% else %}
+        <p>No exercises have been assigned yet.</p>
       {% endif %}
     </section>
+
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <span>© 2025 PhysioCare AI</span>
+      <span>Ac 2025 PhysioCare AI</span>
     </div>
   </footer>
 </body>
 </html>
-
