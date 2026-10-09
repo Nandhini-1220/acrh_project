@@ -400,7 +400,7 @@ def launch_exercise():
     # Verify the exercise is actually assigned to the patient
     conn = get_db_connection()
     assigned = conn.execute('''
-        SELECT 1 FROM exercise_assignments ea 
+        SELECT ea.target_repetitions FROM exercise_assignments ea 
         JOIN exercises e ON ea.exercise_id = e.id 
         WHERE ea.patient_id = ? AND LOWER(REPLACE(e.name, ' ', '_')) = ? AND ea.level = ?
     ''', (patient_id, exercise_key, level)).fetchone()
@@ -410,7 +410,8 @@ def launch_exercise():
         flash("You do not have this exercise assigned at this level.")
         return redirect(url_for('patient', patient_id=patient_id))
 
-    print("Launching:", exercise_key)
+    target_reps = assigned['target_repetitions']
+    print("Launching:", exercise_key, "with target reps:", target_reps)
     
     # Generate token
     token = str(uuid.uuid4())
@@ -424,6 +425,7 @@ def launch_exercise():
     env["EXERCISE_KEY"] = exercise_key
     env["PATIENT_ID"] = str(patient_id or '')
     env["LEVEL"] = str(level)
+    env["TARGET_REPS"] = str(target_reps)
     env["API_TOKEN"] = token
     env["API_URL"] = request.host_url.rstrip('/') + "/api/record_session"
 
@@ -484,34 +486,30 @@ def exercise_detail(exercise_key: str):
     return render_template("exercise.html", ex_key=exercise_key, ex=ex_data, level=level)
 
 
-@app.route("/feedback", methods=['GET', 'POST'])
+@app.route("/feedback")
 def feedback():
     patient_id = session.get('patient_id') if 'patient_id' in session else 1
     level = request.args.get('level', 1)
     exercise_key = request.args.get("exercise")
     token = request.args.get("token")
     
-    if request.method == 'POST':
-        if token and token not in ACTIVE_TOKENS:
-            flash('Automatic result was already recorded by the camera! No duplicate saved.')
-            return redirect(url_for('patient', patient_id=patient_id))
-            
-        if token in ACTIVE_TOKENS:
-            ACTIVE_TOKENS.pop(token)
-            
-        reps = int(request.form.get('reps', 0))
-        
-        # Save newly recorded session into SQLite
-        try:
-            record_exercise_session(patient_id, exercise_key, level, reps, score=0, completed=True)
-            flash(f'Session saved: {reps} reps for Level {level}!')
-        except Exception as e:
-            print("Error recording session:", e)
-            flash('Error recording progress. Please try again.')
-            
-        return redirect(url_for('patient', patient_id=patient_id))
+    recorded_reps = None
+    if token and token not in ACTIVE_TOKENS:
+        # Token consumed means CV automatically recorded it. Fetch latest session.
+        conn = get_db_connection()
+        formatted_name = " ".join([word.capitalize() for word in exercise_key.split('_')])
+        exercise = conn.execute('SELECT id FROM exercises WHERE name = ?', (formatted_name,)).fetchone()
+        if exercise:
+            latest = conn.execute('''
+                SELECT repetitions FROM exercise_sessions 
+                WHERE patient_id = ? AND exercise_id = ? AND level = ?
+                ORDER BY timestamp DESC LIMIT 1
+            ''', (patient_id, exercise['id'], level)).fetchone()
+            if latest:
+                recorded_reps = latest['repetitions']
+        conn.close()
     
-    return render_template("feedback.html", exercise_key=exercise_key, patient_id=patient_id, level=level, token=token)
+    return render_template("feedback.html", exercise_key=exercise_key, patient_id=patient_id, level=level, token=token, recorded_reps=recorded_reps)
 
 # Token storage for CV script results
 ACTIVE_TOKENS = {}

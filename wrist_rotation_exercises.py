@@ -99,7 +99,12 @@ if exercise_key not in EXERCISES:
     current_exercise = list(EXERCISES.keys())[0]
 else:
     current_exercise = exercise_key
-target_reps = 2
+    
+try:
+    target_reps = int(os.environ.get("TARGET_REPS", 2))
+except (ValueError, TypeError):
+    target_reps = 2
+    
 reps = 0
 hold_time = EXERCISES[current_exercise]['hold_time']
 target_angle_global = target_angle
@@ -132,7 +137,10 @@ def calculate_angle(a, b, c):
     ang = math.degrees(
         math.atan2(c[1]-b[1], c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0])
     )
-    return abs(ang)
+    ang = abs(ang) % 360
+    if ang > 180:
+        ang = 360 - ang
+    return ang
 
 def calculate_rotation_angle(wrist, middle_finger, index_finger):
     """Calculate wrist rotation angle based on hand orientation"""

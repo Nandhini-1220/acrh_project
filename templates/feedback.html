@@ -23,15 +23,14 @@
     <section class="card">
       <h3>Session summary</h3>
       <p>You finished: <strong>{{ exercise_key or 'your exercise' }}</strong></p>
-      <p><em>Your exercise result is recorded automatically when the camera window closes.</em></p>
-      <p>If the camera disconnected or you need to log manually, enter reps completed:</p>
-      <form method="POST">
-        <div class="form-group">
-          <label for="reps">Reps completed (Level {{ level }}):</label>
-          <input type="number" id="reps" name="reps" min="0" required>
-        </div>
-        <button type="submit" class="btn">Save Progress</button>
-      </form>
+      <p>Your repetitions are detected and saved by the camera when the exercise session ends.</p>
+      <div style="margin: 20px 0; padding: 15px; background: #e9ecef; border-radius: 5px;">
+      {% if recorded_reps is not none %}
+        <p style="margin: 0; font-size: 1.1em;"><strong>Repetitions completed: {{ recorded_reps }}</strong></p>
+      {% else %}
+        <p style="margin: 0; color: #666;">Waiting for camera session to complete...</p>
+      {% endif %}
+      </div>
       <div class="actions">
         <a class="btn secondary" href="{{ url_for('patient', patient_id=patient_id) }}">Back to Levels</a>
       </div>
