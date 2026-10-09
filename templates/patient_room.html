@@ -29,26 +29,12 @@
     </section>
 
     <section class="card">
-      <h3>Level-wise Progress</h3>
-      <div class="grid">
-        <div class="card">
-          <h4>Level 1: {{ level_progress[0] }} / 10</h4>
-        </div>
-        <div class="card">
-          <h4>Level 2: {{ level_progress[1] }} / 10</h4>
-        </div>
-        <div class="card">
-          <h4>Level 3: {{ level_progress[2] }} / 10</h4>
-        </div>
-        <div class="card">
-          <h4>Level 4: {{ level_progress[3] }} / 10</h4>
-        </div>
-      </div>
+      <h3>Overall Progress</h3>
       <div class="progress-container">
         <div class="progress-bar">
           <div class="progress-fill" style="width: {{ "%.0f"|format(overall) }}%"></div>
         </div>
-        <p class="progress-text">Overall Progress: {{ "%.0f"|format(overall) }}%</p>
+        <p class="progress-text">{{ "%.0f"|format(overall) }}% Complete</p>
       </div>
       <div class="actions">
         <a class="btn" href="/therapist">Back to Dashboard</a>

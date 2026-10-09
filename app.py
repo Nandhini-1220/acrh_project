@@ -145,12 +145,11 @@ def get_patient_progress(patient_id):
                 
     # PRECEDENCE RULE: 
     # If the patient has explicitly assigned exercises in SQLite, use those to compute overall progress.
-    # Otherwise, fall back to the legacy data.json levels.
+    # Otherwise, set progress to 0 (do not fall back to legacy data.json).
     if assigned_count > 0:
         overall_progress = int(total_percentage_sum / assigned_count)
     else:
-        total_reps = sum(levels)
-        overall_progress = min(100, int((total_reps / 40.0) * 100))
+        overall_progress = 0
         
     conn.close()
     
@@ -160,7 +159,6 @@ def get_patient_progress(patient_id):
         'level3': levels[2],
         'level4': levels[3],
         'overall': overall_progress,
-        'levels_array': levels,
         'assigned_count': assigned_count,
         'completed_assignments_count': completed_assignments_count,
         'total_sessions_count': total_sessions_count,
@@ -296,7 +294,7 @@ def patient_room(patient_id):
     
     prog = get_patient_progress(patient_id)
     
-    return render_template('patient_room.html', patient=patient, level_progress=prog['levels_array'], overall=prog['overall'], exercises=exercises)
+    return render_template('patient_room.html', patient=patient, overall=prog['overall'], exercises=exercises)
 
 
 @app.route('/assign_exercise/<int:patient_id>', methods=['POST'])

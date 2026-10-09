@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -30,7 +30,10 @@
     {% endwith %}
 
     <section style="margin-bottom: 40px;">
-      <h2>Assigned Exercises</h2>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
+        <h2>Assigned Exercises</h2>
+        <h3 style="color: #555;">Overall Progress: {{ progress.overall }}%</h3>
+      </div>
       
       {% if assigned_exercises %}
       <div class="grid">
